@@ -15,8 +15,7 @@ $text = strtolower($data['text']);
 $chat_id = $data['chat']['id'];
 
 // получаем информацию об отправителе
-// $from_id = $data['from']['id'];
-// $from_name = $data['from']['first_name'];
+$user_name = $data['from']['first_name'];
 
 // формируем кнопки с колбеками
 $keyboard = [
@@ -67,6 +66,6 @@ $sendData['chat_id'] = $chat_id;
 if($method) sendTelegram($method, $sendData);
 
 // если пользователя запустил бота, а чата с ним не в базе - добавляем в базу
-if($text == '/start') saveUser($chat_id);
+if($text == '/start') saveUser($chat_id, $user_name);
 // если пользователь остановил бота - удаляем чат с ним из базы
 if($text == '/stop') removeUser($chat_id);

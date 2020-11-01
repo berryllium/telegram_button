@@ -19,31 +19,27 @@ function sendTelegram($method, $data, $headers = []) {
     if (!file_exists(DB_FILE_PATH)) return [];
     $str = file_get_contents(DB_FILE_PATH);
     if ($str) {
-      return explode(', ', $str);
+      return unserialize($str);
     } else {
       return [];
     }
   }
   
   function setDB($db) {
-    file_put_contents(DB_FILE_PATH, implode(', ', $db));
+    file_put_contents(DB_FILE_PATH, serialize($db));
     return false;
   }
   
-  function saveUser($chat_id) {
+  function saveUser($chat_id, $user_name = '') {
     $db = getDB();
-    if(!in_array($chat_id, $db)) {
-      $db[] = $chat_id;
-      setDB($db);
-    }
+    $db[$chat_id] = $user_name;
+    setDB($db);
     return false;
   }
   
   function removeUser($chat_id) {
     $db = getDB();
-    if(($key = array_search($chat_id,$db)) !== FALSE){
-      unset($db[$key]);
-    }
+    unset($db[$chat_id]);
     setDB($db);
     return false;
   }
@@ -62,15 +58,19 @@ function sendTelegram($method, $data, $headers = []) {
     $db = getDB();
     if(!count($db)) return false;
     $k = 0;
-    for($i = 0; $i < count($db); $i++) {
+    foreach($db as $chat_id => $user_name) {
       // учитываем ограничение рассылки - не более 30 сообщение в секунду  
+      $k++;
       if ($k == 30) {
           sleep(1);
           $k = 0;
-      }      
-      sendMessage($db[$i], MESSAGE);
-      echo $db[$i];
-      $k++;
+      }
+      if($user_name) {
+        $message = str_replace('#name#', $user_name, MESSAGE);
+      } else {
+        $message = MESSAGE_WITHOUT_NAME;
+      }
+      sendMessage($chat_id, $message);
     }
   }
   
